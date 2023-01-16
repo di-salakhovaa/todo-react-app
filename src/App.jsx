@@ -1,107 +1,119 @@
 import { useState, useEffect } from "react";
 
-const UseEffectComponent = () => {
-  useEffect(() => {
-    return () => console.log('Компонент был удален со страницы');
-  }, []);
-
-  return (
-    <div>
-      Текстовый компонент для проверки удаления компонента со страницы
-    </div>
-  );
-}
-
 const App = () => {
-  const [count, setCount] = useState(0);
-  const [name, setName] = useState("");
 
-  const [skills, setSkills] = useState(['Front-end', 'Back-End', 'CI/CD']);
+  // состоянии (данные задачи)
+  const [todos, setTodos] = useState([
+    {
+      id: 1,
+      name: "Купить продукты",
+      date: new Date(),
+      checked: false
+    },
 
-  const [form, setForm] = useState({
-    email: "",
-    password: ""
-  });
+    {
+      id: 2,
+      name: "Заправить автомобиль (Lada Granta - чёрного цвета 21 века)",
+      date: new Date(),
+      checked: false
+    }
+  ]);
 
-  const [a, setA] = useState(0);
-  console.log('За пределами useEffect');
+  const [value,setValue] = useState('');
 
+  // значение поля 
+  const onChangeHandle = (e) => {
+    setValue(e.target.value);
+  }
 
-  useEffect(() => {
-    console.log('useEffect()');
+  // Функция добавления задания
+  const onSubmitHandle = (e) => {
+    e.preventDefault();
 
-    // при удалении компонента со страницы
-    // return () => {...};
-  }, [count, form]);
+    setTodos((prevState) => {
+      prevState = [...prevState];
 
-  const onChangeFormHandle = (e) => {
-    setForm((prevState) => {
-      prevState = {...prevState};
-
-      prevState[e.target.name] = e.target.value;
+      prevState.push({
+        id: Date.now(),
+        name: value,
+        date: new Date(),
+        checked: false
+      });
 
       return prevState;
     });
+
+    setValue('');
   }
 
-  const onChangeHandle = (e) => {
-    setName(e.target.value);
-    setCount(e.target.value.length);
-  };
+  // работа со статусом задачи
+  const onCheckedToggle = (id) => {
+    setTodos((prevState) => {
+      prevState = [...prevState];
+      prevState = prevState.map((todo) => {
+        if (todo.id === id) {
+          return {
+            ...todo,
+            checked: !todo.checked
+          }
+        }
 
-  const onSubmitAddSkill = (e) => {
-    console.log(e);
-
-    if (e.keyCode === 13) {
-      setSkills((prevState) => {
-        return [...prevState, e.target.value];
+        return todo;
       });
-      e.target.value = '';
-    };
+
+      return prevState;
+    })
+  }
+
+  // удаление задачи 
+  const onDeleteTodoById = (id) => {
+    setTodos((prevState) => {
+      prevState = [...prevState];
+
+      // .filter()
+      prevState = prevState.filter((todo) => todo.id !== id)
+      
+      return prevState;
+    })
+  }
+
+  // формат времени
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth()+1;
+    const day = date.getDate();
+
+    return `${day}.${month}.${year}`;
   }
 
   return (
-    <div>
-      <p>Вы нажали на меня {count} раз(а)</p>
-      <button onClick={() => setCount((prevState) => prevState + 1)}>+1</button>
-      <button onClick={() => setCount(count + 5)}>+5</button>
+    <div className="container">
+      <div>
+        <form onSubmit={(e) => onSubmitHandle(e)}>
+          <h2>Добавить задачу:</h2>
+          <input type="text" placeholder="Купить молоко..." onChange={(e) => onChangeHandle(e)} value={value}/>
+        </form>
+      </div>
 
-      <br />
-
-      {
-        count >= 10 ? <h1>Комопнент больше недоступен</h1> : <UseEffectComponent />
-      }
-
-      <br />
-
-      <h1>Привет, {name}!</h1>
-      <input type="text" onChange={(e) => onChangeHandle(e)} />
-
-      <br /> <br />
-
-      <input type="text" onKeyDown={(e) => onSubmitAddSkill(e)} />
-
-      <ul>
+      {/* все задачи */}
+      <div className="todo_list">
+        {/* одна задача */}
         {
-          skills.map((skill) => <li>{skill}</li>)
+          todos.map((todo) => {
+            return (
+              <div className="todo_item">
+                <h3 className="todo_name">{todo.name} ({formatDate(todo.date)})</h3>
+                <div className="button_list">
+                  <button className="checked_button" onClick={() => onCheckedToggle(todo.id)}>
+                    {todo.checked ? "Не выполнена" : "Выполнена"}
+                  </button>
+                  <button className="delete_button" onClick={() => onDeleteTodoById(todo.id)}>Удалить</button>
+                </div>
+              </div>
+            )
+          })
         }
-      </ul>
-
-      <br /> <br />
-
-      <form onSubmit={(e) => e.preventDefault}>
-        <label>Email:</label>
-        <input type="email" name="email" onChange={(e) => onChangeFormHandle(e)} value={form.email} />
-
-        <br />
-
-        <label>Password:</label>
-        <input type="password" name="password" onChange={(e) => onChangeFormHandle(e)} value={form.password}/>
-
-        <br />
-
-        <button>Send!</button>
-      </form>
+      </div>
     </div>
   );
 }
